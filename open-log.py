@@ -1,8 +1,8 @@
 import csv
 import pandas as pd
 
-filename = "data/01072021105028peers.log"
-filename_csv = "data/01072021105028peers-log.csv"
+filename = "data/peers.log"
+filename_csv = "data/peers-log.csv"
 
 with open(filename_csv, 'w', encoding='utf-8') as w_file:
     file_writer = csv.writer(w_file, delimiter=",", lineterminator="\r")

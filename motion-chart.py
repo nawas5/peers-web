@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+import time
 
 import dash
 import dash_core_components as dcc
@@ -16,7 +17,9 @@ from datetime import datetime
 
 pd.options.mode.chained_assignment = None
 
-def tracking_simulator(file, start, stop):
+def tracking_simulator(file,start,stop):
+    # переписать, чтобы брать только некоторые точки
+    # раз в секунду
 
     t1_start = perf_counter()
     print("Process started at: ", datetime.now())
@@ -33,6 +36,24 @@ def tracking_simulator(file, start, stop):
     df = df.rename(columns={"name":"Label name"})
     df["size"] = 10
 
+    df_end = df.head(0)
+
+    for i in range(len(metka_name)):
+        timesec = []
+        df_metka = df[df["Label name"] == metka_name[i]]
+        for j in range(len(df_metka)):
+            timesec.append(time.strftime("%M:%S", time.gmtime(df_metka["time"].values[j])))
+        df_metka["timesec"] = timesec
+        df_metka = df_metka.drop_duplicates('timesec')
+        df_end = pd.concat([df_end, df_metka], ignore_index=True)
+
+
+    df = df_end.sort_values(by='timesec')
+
+    # собрать отдельно все такие метки, затем все другие
+    # и собрать лог, где они обновляются каждую секунду и сохранять его таким образом
+    # можно ли поставить время задержки обновления графика
+
     # нормировать х и у на максимальные значения
     # по х - 12, по у - 6
     df["x"] = df["x"] / 13
@@ -44,13 +65,15 @@ def tracking_simulator(file, start, stop):
 
     color_discrete_map = {str(metka_name[i]): color[i] for i in range(len(metka_name))}
 
+    fig = go.Figure()
+    # fig = px.scatter
     fig = px.scatter(
         df,
         x="x",
         y="y",
         color="Label name",
         hover_name="Label name",
-        animation_frame="time",
+        animation_frame="timesec",
         animation_group="Label name",
         range_x=[-0.05, 1.05],
         range_y=[-0.05, 1.05],
@@ -66,7 +89,8 @@ def tracking_simulator(file, start, stop):
             "size": False,
             "Label name": False,
             "z": False,
-            "number": False
+            "number": False,
+            "timesec": False
         },
     )
 
